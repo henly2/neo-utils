@@ -82,8 +82,8 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 func makeError(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Error: struct {
-			Code    int
-			Message string
+			Code    int `json:"code"`
+			Message string `json:"message"`
 		}{Code: -1, Message: err.Error()},
 	}
 }
