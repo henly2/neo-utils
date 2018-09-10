@@ -79,11 +79,21 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 	return nil
 }
 
+func makeError(err error) *ErrorResponse {
+	return &ErrorResponse{
+		Error: struct {
+			Code    int
+			Message string
+		}{Code: -1, Message: err.Error()},
+	}
+}
+
 func (n *NEORPCClient) GetContractState(scripthash string) GetContractStateResponse {
 	response := GetContractStateResponse{}
 	params := []interface{}{scripthash, 1}
 	err := n.makeRequest("getcontractstate", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -94,6 +104,7 @@ func (n *NEORPCClient) SendRawTransaction(rawTransactionInHex string) SendRawTra
 	params := []interface{}{rawTransactionInHex, 1}
 	err := n.makeRequest("sendrawtransaction", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -104,6 +115,7 @@ func (n *NEORPCClient) GetRawTransaction(txID string) GetRawTransactionResponse 
 	params := []interface{}{txID, 1}
 	err := n.makeRequest("getrawtransaction", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -114,6 +126,7 @@ func (n *NEORPCClient) GetRawTransactionHex(txID string) GetRawTransactionHexRes
 	params := []interface{}{txID, 0}
 	err := n.makeRequest("getrawtransaction", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -124,6 +137,7 @@ func (n *NEORPCClient) GetBlock(blockHash string) GetBlockResponse {
 	params := []interface{}{blockHash, 1}
 	err := n.makeRequest("getblock", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -134,6 +148,7 @@ func (n *NEORPCClient) GetBlockByIndex(index int) GetBlockResponse {
 	params := []interface{}{index, 1}
 	err := n.makeRequest("getblock", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -144,6 +159,7 @@ func (n *NEORPCClient) GetBlockCount() GetBlockCountResponse {
 	params := []interface{}{}
 	err := n.makeRequest("getblockcount", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -154,6 +170,7 @@ func (n *NEORPCClient) GetAccountState(address string) GetAccountStateResponse {
 	params := []interface{}{address, 1}
 	err := n.makeRequest("getaccountstate", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -165,7 +182,8 @@ func (n *NEORPCClient) GetTokenBalance(tokenHash string, neoAddress string) Toke
 
 	v, b, _ := btckey.B58checkdecode(neoAddress)
 	if v != 0x17 {
-		return TokenBalanceResponse{}
+		response.ErrorResponse = makeError(fmt.Errorf("err neoAddress(%s)", neoAddress))
+		return response
 	}
 	adddressScriptHash := fmt.Sprintf("%x", b)
 	input := NewInvokeFunctionStackByteArray(adddressScriptHash)
@@ -174,6 +192,7 @@ func (n *NEORPCClient) GetTokenBalance(tokenHash string, neoAddress string) Toke
 	params := []interface{}{tokenHash, "balanceOf", args}
 	err := n.makeRequest("invokefunction", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -184,6 +203,7 @@ func (n *NEORPCClient) InvokeScript(scriptInHex string) InvokeScriptResponse {
 	params := []interface{}{scriptInHex, 1}
 	err := n.makeRequest("invokescript", params, &response)
 	if err != nil {
+		response.ErrorResponse = makeError(err)
 		return response
 	}
 	return response
@@ -238,12 +258,10 @@ func (n *NEORPCClient) Nep5Symbol(scriptHash string) (string, error) {
 	}
 
 	val, ok := response.Result.Stack[0].Value.(string)
-
 	if !ok {
 		return "", fmt.Errorf("unexpect result :%v", response.Result.Stack[0].Value)
 	}
 
 	bytes, err := hex.DecodeString(val)
-
 	return string(bytes), err
 }
