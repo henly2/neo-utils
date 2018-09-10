@@ -31,15 +31,17 @@ type ClaimableGASResponse struct {
 	Response
 	*ErrorResponse
 	Result struct {
-		Data struct {
-			Gas    string `json:"gas"`
-			Claims []struct {
-				Asset          string `json:"asset"`
-				Index          int    `json:"index"`
-				Txid           string `json:"txid"`
-				Value          string `json:"value"`
-				CreatedAtBlock int    `json:"createdAtBlock"`
-			} `json:"claims"`
-		} `json:"data"`
+		Data ClaimableGASResultData `json:"data"`
 	} `json:"result"`
+}
+
+type ClaimableGASResultData struct {
+	Gas    string `json:"gas"`
+	Claims []struct {
+		Asset          string `json:"asset"`
+		Index          int    `json:"index"`
+		Txid           string `json:"txid"`
+		Value          string `json:"value"`
+		CreatedAtBlock int    `json:"createdAtBlock"`
+	} `json:"claims"`
 }

@@ -6,11 +6,14 @@ import (
 	"strings"
 
 	"github.com/o3labs/neo-utils/neoutils/smartcontract"
+	"encoding/json"
 )
 
 type NEP5Interface interface {
 	MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract.NativeAsset, amount float64, unspent smartcontract.Unspent, remark string) ([]byte, string, error)
 	TransferNEP5RawTransaction(wallet Wallet, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, string, error)
+	GenerateNEP5RawTransaction(fromAddress string, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error)
+	SignNEP5RawTransaction(wallet Wallet, tx []byte) ([]byte, string, error)
 }
 
 type NEP5 struct {
@@ -215,5 +218,140 @@ func (n *NEP5) MintTokensRawTransaction(wallet Wallet, assetToSend smartcontract
 	//get tx id
 	txID := tx.ToTXID()
 
+	return endPayload, txID, nil
+}
+
+func (n *NEP5) GenerateNEP5RawTransaction(fromAddress string, toAddress smartcontract.NEOAddress, amount float64, unspent smartcontract.Unspent, attributes map[smartcontract.TransactionAttribute][]byte) ([]byte, error) {
+
+	from := smartcontract.ParseNEOAddress(fromAddress)
+	if from == nil {
+		return nil, fmt.Errorf("Invalid from address")
+	}
+
+	to := smartcontract.ParseNEOAddress(toAddress.ToString())
+	if to == nil {
+		return nil, fmt.Errorf("Invalid from address")
+	}
+
+	if amount <= 0 {
+		return nil, fmt.Errorf("Amount must be greater than zero")
+	}
+
+	//the token amount is always in uint
+	numberOfTokens := uint(amount * float64(math.Pow10(8)))
+
+	args := []interface{}{from, to, smartcontract.TokenAmount(numberOfTokens)}
+
+	//New invocation transaction struct and fill with all necessary data
+	tx := smartcontract.NewInvocationTransaction()
+	txData := smartcontract.NewScriptBuilder().GenerateContractInvocationData(n.ScriptHash, "transfer", args)
+
+	tx.Data = txData
+
+	b, err := json.Marshal(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+
+	/*
+	//for smart contract invocation we send the minimum amount of gas to it
+	//0.00000001 gas
+	amountToSend := float64(0.00000001)
+	assetToSend := smartcontract.GAS
+
+	//generate transaction inputs
+	txInputs, err := smartcontract.NewScriptBuilder().GenerateTransactionInput(unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
+	if err != nil {
+		return nil, "", err
+	}
+
+	//transaction inputs
+	tx.Inputs = txInputs
+
+	//generate transaction outputs
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return nil, "", err
+	}
+	//transaction attributes
+	tx.Attributes = txAttributes
+
+	//send GAS to the same account
+	sender := smartcontract.ParseNEOAddress(wallet.Address)
+	receiver := smartcontract.ParseNEOAddress(wallet.Address)
+	txOutputs, err := smartcontract.NewScriptBuilder().GenerateTransactionOutput(sender, receiver, unspent, assetToSend, amountToSend, n.NetworkFeeAmount)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tx.Outputs = txOutputs
+	*/
+
+	/*
+	//begin signing process and invocation script
+	privateKeyInHex := bytesToHex(wallet.PrivateKey)
+
+	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
+	if err != nil {
+		return nil, "", err
+	}
+
+	signature := smartcontract.TransactionSignature{
+		SignedData: signedData,
+		PublicKey:  wallet.PublicKey,
+	}
+
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
+	//assign scripts to the tx
+	tx.Script = txScripts
+	//end signing process
+
+	//concat data
+	endPayload := []byte{}
+	endPayload = append(endPayload, tx.ToBytes()...)
+	endPayload = append(endPayload, n.ScriptHash.ToBigEndian()...)
+
+	//get tx id
+	txID := tx.ToTXID()
+	return endPayload, txID, nil
+	*/
+}
+
+func (n *NEP5) SignNEP5RawTransaction(wallet Wallet, txBytes []byte) ([]byte, string, error) {
+	tx := smartcontract.NewInvocationTransaction()
+	err := json.Unmarshal(txBytes, tx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	//begin signing process and invocation script
+	privateKeyInHex := bytesToHex(wallet.PrivateKey)
+
+	signedData, err := Sign(txBytes, privateKeyInHex)
+	if err != nil {
+		return nil, "", err
+	}
+
+	signature := smartcontract.TransactionSignature{
+		SignedData: signedData,
+		PublicKey:  wallet.PublicKey,
+	}
+
+	scripts := []interface{}{signature}
+	txScripts := smartcontract.NewScriptBuilder().GenerateVerificationScripts(scripts)
+	//assign scripts to the tx
+	tx.Script = txScripts
+	//end signing process
+
+	//concat data
+	endPayload := []byte{}
+	endPayload = append(endPayload, tx.ToBytes()...)
+	endPayload = append(endPayload, n.ScriptHash.ToBigEndian()...)
+
+	//get tx id
+	txID := tx.ToTXID()
 	return endPayload, txID, nil
 }

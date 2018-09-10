@@ -47,6 +47,23 @@ type GetRawTransactionResponse struct {
 	Result         GetRawTransactionResult `json:"result"`
 }
 
+type GetRawTransactionHexResponse struct {
+	JSONRPCResponse
+	*ErrorResponse                         //optional
+	Result         string `json:"result"`
+}
+
+type Vin struct {
+	Txid string `json:"txid"`
+	Vout int    `json:"vout"`
+}
+type Vout struct {
+	N       int    `json:"n"`
+	Asset   string `json:"asset"`
+	Value   string `json:"value"`
+	Address string `json:"address"`
+}
+
 type GetRawTransactionResult struct {
 	Txid       string `json:"txid"`
 	Size       int    `json:"size"`
@@ -56,16 +73,18 @@ type GetRawTransactionResult struct {
 		Usage string `json:"usage"`
 		Data  string `json:"data"`
 	} `json:"attributes"`
-	Vin []struct {
-		Txid string `json:"txid"`
-		Vout int    `json:"vout"`
-	} `json:"vin"`
-	Vout []struct {
-		N       int    `json:"n"`
-		Asset   string `json:"asset"`
-		Value   string `json:"value"`
-		Address string `json:"address"`
-	} `json:"vout"`
+	//Vin []struct {
+	//	Txid string `json:"txid"`
+	//	Vout int    `json:"vout"`
+	//} `json:"vin"`
+	//Vout []struct {
+	//	N       int    `json:"n"`
+	//	Asset   string `json:"asset"`
+	//	Value   string `json:"value"`
+	//	Address string `json:"address"`
+	//} `json:"vout"`
+	Vin []Vin `json:"vin"`
+	Vout []Vout `json:"vout"`
 	Claims []struct {
 		Txid string `json:"txid"`
 		Vout int    `json:"vout"`
@@ -109,22 +128,23 @@ type GetBlockResult struct {
 		Invocation   string `json:"invocation"`
 		Verification string `json:"verification"`
 	} `json:"script"`
-	Tx []struct {
-		Txid       string        `json:"txid"`
-		Size       int           `json:"size"`
-		Type       string        `json:"type"`
-		Version    int           `json:"version"`
-		Attributes []interface{} `json:"attributes"`
-		Vin        []interface{} `json:"vin"`
-		Vout       []interface{} `json:"vout"`
-		Claims     []interface{} `json:"claims"`
-		SysFee     string        `json:"sys_fee"`
-		NetFee     string        `json:"net_fee"`
-		Scripts    []interface{} `json:"scripts"`
-		Nonce      int64         `json:"nonce,omitempty"`
-		Script     string        `json:"script,omitempty"`
-		Gas        string        `json:"gas,omitempty"`
-	} `json:"tx"`
+	//Tx []struct {
+	//	Txid       string        `json:"txid"`
+	//	Size       int           `json:"size"`
+	//	Type       string        `json:"type"`
+	//	Version    int           `json:"version"`
+	//	Attributes []interface{} `json:"attributes"`
+	//	Vin        []interface{} `json:"vin"`
+	//	Vout       []interface{} `json:"vout"`
+	//	Claims     []interface{} `json:"claims"`
+	//	SysFee     string        `json:"sys_fee"`
+	//	NetFee     string        `json:"net_fee"`
+	//	Scripts    []interface{} `json:"scripts"`
+	//	Nonce      int64         `json:"nonce,omitempty"`
+	//	Script     string        `json:"script,omitempty"`
+	//	Gas        string        `json:"gas,omitempty"`
+	//} `json:"tx"`
+	Tx []GetRawTransactionResult `json:"tx"`
 	Confirmations int    `json:"confirmations"`
 	Nextblockhash string `json:"nextblockhash"`
 }

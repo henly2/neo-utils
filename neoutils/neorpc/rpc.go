@@ -9,12 +9,15 @@ import (
 	"time"
 
 	"github.com/o3labs/neo-utils/neoutils/btckey"
+	"strconv"
+	"encoding/hex"
 )
 
 type NEORPCInterface interface {
 	GetContractState(scripthash string) GetContractStateResponse
 	SendRawTransaction(rawTransactionInHex string) SendRawTransactionResponse
 	GetRawTransaction(txID string) GetRawTransactionResponse
+	GetRawTransactionHex(txID string) GetRawTransactionHexResponse
 	makeRequest(method string, params []interface{}, out interface{}) error
 	GetBlockCount() GetBlockCountResponse
 	GetBlock(blockHash string) GetBlockResponse
@@ -106,6 +109,16 @@ func (n *NEORPCClient) GetRawTransaction(txID string) GetRawTransactionResponse 
 	return response
 }
 
+func (n *NEORPCClient) GetRawTransactionHex(txID string) GetRawTransactionHexResponse {
+	response := GetRawTransactionHexResponse{}
+	params := []interface{}{txID, 0}
+	err := n.makeRequest("getrawtransaction", params, &response)
+	if err != nil {
+		return response
+	}
+	return response
+}
+
 func (n *NEORPCClient) GetBlock(blockHash string) GetBlockResponse {
 	response := GetBlockResponse{}
 	params := []interface{}{blockHash, 1}
@@ -174,4 +187,63 @@ func (n *NEORPCClient) InvokeScript(scriptInHex string) InvokeScriptResponse {
 		return response
 	}
 	return response
+}
+
+type InvokeFunctionResponse struct {
+	JSONRPCResponse
+	*ErrorResponse
+	Result struct {
+		Script      string `json:"script"`
+		State       string `json:"state"`
+		GasConsumed string `json:"gas_consumed"`
+		Stack       []struct {
+			Type  string `json:"type"`
+			Value interface{} `json:"value"`
+		} `json:"stack"`
+	} `json:"result"`
+}
+
+// Nep5Decimals get nep5 deciamls
+func (n *NEORPCClient) Nep5Decimals(scriptHash string) (uint64, error) {
+	response := InvokeFunctionResponse{}
+	params := []interface{}{scriptHash, "decimals"}
+	err := n.makeRequest("invokefunction", params, &response)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(response.Result.Stack) == 0 {
+		return 0, fmt.Errorf("unexpect result :%v", response.Result)
+	}
+
+	val, ok := response.Result.Stack[0].Value.(string)
+	if !ok {
+		return 0, fmt.Errorf("unexpect result :%v", response.Result.Stack[0].Value)
+	}
+
+	return strconv.ParseUint(val, 10, 64)
+}
+
+// Nep5Symbol .
+func (n *NEORPCClient) Nep5Symbol(scriptHash string) (string, error) {
+	response := InvokeFunctionResponse{}
+	params := []interface{}{scriptHash, "symbol"}
+	err := n.makeRequest("invokefunction", params, &response)
+	if err != nil {
+		return "", err
+	}
+
+	if len(response.Result.Stack) == 0 {
+		return "", fmt.Errorf("unexpect result :%v", response.Result)
+	}
+
+	val, ok := response.Result.Stack[0].Value.(string)
+
+	if !ok {
+		return "", fmt.Errorf("unexpect result :%v", response.Result.Stack[0].Value)
+	}
+
+	bytes, err := hex.DecodeString(val)
+
+	return string(bytes), err
 }
