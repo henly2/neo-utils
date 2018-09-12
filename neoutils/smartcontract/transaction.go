@@ -62,7 +62,8 @@ func (t *Transaction) ToTXID() string {
 func NewInvocationTransaction() Transaction {
 	return Transaction{
 		Type:    InvocationTransaction,
-		Version: NEOTradingVersion,
+		//Version: NEOTradingVersion,
+		Version:InvocationTradingVersion,
 	}
 }
 

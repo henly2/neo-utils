@@ -224,7 +224,8 @@ func (p *Parser) splitScriptWithAPPCALL() ([]appcall, error) {
 	//the script hash from rawtransaction's script is reversed
 	//in order to return the proper one that you get when call "getcontractstate"
 	//we have to reverse the bytes
-	if numberOfAPPCALLs > 1 {
+	// FIXME: henly2 modify 1 to 0
+	if numberOfAPPCALLs > 0 {
 		for index := 0; index < len(splitted)-1; index++ {
 			tempOperationAndArgs := []byte{}
 			tempScriptHash := []byte{}

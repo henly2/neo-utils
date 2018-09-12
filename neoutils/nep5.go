@@ -248,6 +248,14 @@ func (n *NEP5) GenerateNEP5RawTransaction(fromAddress string, toAddress smartcon
 
 	tx.Data = txData
 
+	//generate transaction outputs
+	txAttributes, err := smartcontract.NewScriptBuilder().GenerateTransactionAttributes(attributes)
+	if err != nil {
+		return nil, err
+	}
+	//transaction attributes
+	tx.Attributes = txAttributes
+
 	b, err := json.Marshal(tx)
 	if err != nil {
 		return nil, err
@@ -322,7 +330,7 @@ func (n *NEP5) GenerateNEP5RawTransaction(fromAddress string, toAddress smartcon
 
 func (n *NEP5) SignNEP5RawTransaction(wallet Wallet, txBytes []byte) ([]byte, string, error) {
 	tx := smartcontract.NewInvocationTransaction()
-	err := json.Unmarshal(txBytes, tx)
+	err := json.Unmarshal(txBytes, &tx)
 	if err != nil {
 		return nil, "", err
 	}
@@ -330,7 +338,7 @@ func (n *NEP5) SignNEP5RawTransaction(wallet Wallet, txBytes []byte) ([]byte, st
 	//begin signing process and invocation script
 	privateKeyInHex := bytesToHex(wallet.PrivateKey)
 
-	signedData, err := Sign(txBytes, privateKeyInHex)
+	signedData, err := Sign(tx.ToBytes(), privateKeyInHex)
 	if err != nil {
 		return nil, "", err
 	}

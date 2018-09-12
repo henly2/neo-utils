@@ -24,7 +24,7 @@ type NEORPCInterface interface {
 	GetBlockByIndex(index int) GetBlockResponse
 	GetAccountState(address string) GetAccountStateResponse
 	InvokeScript(scriptInHex string) InvokeScriptResponse
-	GetTokenBalance(tokenHash string, adddress string) TokenBalanceResponse
+	GetTokenBalance(tokenHash string, address string) TokenBalanceResponse
 }
 
 type NEORPCClient struct {
@@ -209,20 +209,6 @@ func (n *NEORPCClient) InvokeScript(scriptInHex string) InvokeScriptResponse {
 	return response
 }
 
-type InvokeFunctionResponse struct {
-	JSONRPCResponse
-	*ErrorResponse
-	Result struct {
-		Script      string `json:"script"`
-		State       string `json:"state"`
-		GasConsumed string `json:"gas_consumed"`
-		Stack       []struct {
-			Type  string `json:"type"`
-			Value interface{} `json:"value"`
-		} `json:"stack"`
-	} `json:"result"`
-}
-
 // Nep5Decimals get nep5 deciamls
 func (n *NEORPCClient) Nep5Decimals(scriptHash string) (uint64, error) {
 	response := InvokeFunctionResponse{}
@@ -239,6 +225,10 @@ func (n *NEORPCClient) Nep5Decimals(scriptHash string) (uint64, error) {
 	val, ok := response.Result.Stack[0].Value.(string)
 	if !ok {
 		return 0, fmt.Errorf("unexpect result :%v", response.Result.Stack[0].Value)
+	}
+
+	if val == "" {
+		return 0, nil
 	}
 
 	return strconv.ParseUint(val, 10, 64)
@@ -264,4 +254,26 @@ func (n *NEORPCClient) Nep5Symbol(scriptHash string) (string, error) {
 
 	bytes, err := hex.DecodeString(val)
 	return string(bytes), err
+}
+
+func (n *NEORPCClient) GetTxOut(txID string, index int) GetTxOutResponse {
+	response := GetTxOutResponse{}
+	params := []interface{}{txID, index}
+	err := n.makeRequest("gettxout", params, &response)
+	if err != nil {
+		response.ErrorResponse = makeError(err)
+		return response
+	}
+	return response
+}
+
+func (n *NEORPCClient) GetApplicationLog(txID string) GetApplicationLogResponse {
+	response := GetApplicationLogResponse{}
+	params := []interface{}{txID, 1}
+	err := n.makeRequest("getapplicationlog", params, &response)
+	if err != nil {
+		response.ErrorResponse = makeError(err)
+		return response
+	}
+	return response
 }

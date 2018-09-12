@@ -32,4 +32,6 @@ func (n NativeAsset) ToLittleEndianBytes() []byte {
 const (
 	NEOTradingVersion           TradingVersion = 0x00
 	NEOTradingVersionPayableGAS TradingVersion = 0x01
+
+	InvocationTradingVersion TradingVersion = 0x01
 )

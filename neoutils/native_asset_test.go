@@ -160,13 +160,13 @@ func TestSendingGASFromMultiSig(t *testing.T) {
 
 	fee := smartcontract.NetworkFeeAmount(0.0)
 	nativeAsset := neoutils.UseNativeAsset(fee)
-	rawtx, txid, err := nativeAsset.GenerateRawTx(fromAddress, asset, amount, to, unspent, attributes)
+	rawtx, err := nativeAsset.GenerateRawTx(fromAddress, asset, amount, to, unspent, attributes)
 	if err != nil {
 		log.Printf("error sending natie %v", err)
 		t.Fail()
 		return
 	}
-	log.Printf("txid %v\n", txid)
+	//log.Printf("txid %v\n", txid)
 	log.Printf("raw %x\n", rawtx)
 
 	wallet1, _ := neoutils.GenerateFromWIF("")

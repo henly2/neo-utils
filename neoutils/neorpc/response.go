@@ -200,3 +200,50 @@ type InvokeScriptResponse struct {
 		} `json:"stack"`
 	} `json:"result"`
 }
+
+type InvokeFunctionResponse struct {
+	JSONRPCResponse
+	*ErrorResponse
+	Result struct {
+		Script      string `json:"script"`
+		State       string `json:"state"`
+		GasConsumed string `json:"gas_consumed"`
+		Stack       []struct {
+			Type  string `json:"type"`
+			Value interface{} `json:"value"`
+		} `json:"stack"`
+	} `json:"result"`
+}
+
+type GetTxOutResponse struct {
+	JSONRPCResponse
+	*ErrorResponse                //optional
+	Result         *Vout `json:"result"`
+}
+
+// application log
+type GetApplicationLogResponse struct {
+	JSONRPCResponse
+	*ErrorResponse
+	Result ApplicationLog `json:"result"`
+}
+
+// ApplicationLog .
+type ApplicationLog struct {
+	ID            string          `json:"txid"`
+	State         string          `json:"vmstate"`
+	GasConsumed   string          `json:"gas_consumed"`
+	Notifications []*Notification `json:"notifications"`
+}
+
+// Notification .
+type Notification struct {
+	Contract string `json:"contract"`
+	State    State  `json:"state"`
+}
+
+// State .
+type State struct {
+	Type  string      `json:"type"`
+	Value interface{} `json:"value,omitempty"`
+}
