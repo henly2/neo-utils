@@ -383,6 +383,12 @@ func (p *Parser) Parse(methodSignature interface{}) ([]interface{}, error) {
 					return nil, err
 				}
 				field.SetInt(v.Int64())
+			case reflect.TypeOf(int64(0)):
+				v, err := ReadBigInt(reader)
+				if err != nil {
+					return nil, err
+				}
+				field.SetInt(v.Int64())
 			}
 		}
 
