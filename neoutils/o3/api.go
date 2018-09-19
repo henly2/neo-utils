@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 const apiEndpoint = "https://platform.o3.network/api"
@@ -72,7 +73,12 @@ func (n *O3Client) makeGETRequest(endpoint string, out interface{}) error {
 	req.Header.Add("content-type", "application/json")
 	req.Header.Set("Connection", "close")
 	req.Close = true
-	res, err := http.DefaultClient.Do(req)
+	//res, err := http.DefaultClient.Do(req)
+	var netClient = &http.Client{
+		Timeout: time.Second * 30,
+		// Transport: netTransport,
+	}
+	res, err := netClient.Do(req)
 	if err != nil {
 		return err
 	}
