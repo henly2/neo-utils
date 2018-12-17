@@ -71,6 +71,7 @@ func (n *NEORPCClient) makeRequest(method string, params []interface{}, out inte
 		return err
 	}
 	defer res.Body.Close()
+
 	err = json.NewDecoder(res.Body).Decode(&out)
 	if err != nil {
 		return err
@@ -267,8 +268,21 @@ func (n *NEORPCClient) GetTxOut(txID string, index int) GetTxOutResponse {
 	return response
 }
 
+// version 2.8.0
 func (n *NEORPCClient) GetApplicationLog(txID string) GetApplicationLogResponse {
 	response := GetApplicationLogResponse{}
+	params := []interface{}{txID, 1}
+	err := n.makeRequest("getapplicationlog", params, &response)
+	if err != nil {
+		response.ErrorResponse = makeError(err)
+		return response
+	}
+	return response
+}
+
+// version 2.9.0~
+func (n *NEORPCClient) GetApplicationLog292(txID string) GetApplicationLogResponse292 {
+	response := GetApplicationLogResponse292{}
 	params := []interface{}{txID, 1}
 	err := n.makeRequest("getapplicationlog", params, &response)
 	if err != nil {

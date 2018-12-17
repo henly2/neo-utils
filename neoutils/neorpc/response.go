@@ -49,7 +49,7 @@ type GetRawTransactionResponse struct {
 
 type GetRawTransactionHexResponse struct {
 	JSONRPCResponse
-	*ErrorResponse                         //optional
+	*ErrorResponse        //optional
 	Result         string `json:"result"`
 }
 
@@ -83,8 +83,8 @@ type GetRawTransactionResult struct {
 	//	Value   string `json:"value"`
 	//	Address string `json:"address"`
 	//} `json:"vout"`
-	Vin []Vin `json:"vin"`
-	Vout []Vout `json:"vout"`
+	Vin    []Vin  `json:"vin"`
+	Vout   []Vout `json:"vout"`
 	Claims []struct {
 		Txid string `json:"txid"`
 		Vout int    `json:"vout"`
@@ -144,9 +144,9 @@ type GetBlockResult struct {
 	//	Script     string        `json:"script,omitempty"`
 	//	Gas        string        `json:"gas,omitempty"`
 	//} `json:"tx"`
-	Tx []GetRawTransactionResult `json:"tx"`
-	Confirmations int    `json:"confirmations"`
-	Nextblockhash string `json:"nextblockhash"`
+	Tx            []GetRawTransactionResult `json:"tx"`
+	Confirmations int                       `json:"confirmations"`
+	Nextblockhash string                    `json:"nextblockhash"`
 }
 
 type GetAccountStateResponse struct {
@@ -209,7 +209,7 @@ type InvokeFunctionResponse struct {
 		State       string `json:"state"`
 		GasConsumed string `json:"gas_consumed"`
 		Stack       []struct {
-			Type  string `json:"type"`
+			Type  string      `json:"type"`
 			Value interface{} `json:"value"`
 		} `json:"stack"`
 	} `json:"result"`
@@ -217,7 +217,7 @@ type InvokeFunctionResponse struct {
 
 type GetTxOutResponse struct {
 	JSONRPCResponse
-	*ErrorResponse                //optional
+	*ErrorResponse       //optional
 	Result         *Vout `json:"result"`
 }
 
@@ -235,6 +235,30 @@ type ApplicationLog struct {
 	GasConsumed   string          `json:"gas_consumed"`
 	Notifications []*Notification `json:"notifications"`
 }
+
+const (
+	VmStateFAULT = "FAULT"
+)
+// application log
+type (
+	GetApplicationLogResponse292 struct {
+		JSONRPCResponse
+		*ErrorResponse
+		Result ApplicationLog292 `json:"result"`
+	}
+	ApplicationLog292 struct {
+		ID         string                    `json:"txid"`
+		Executions []ApplicationLogExecution `json:"executions"`
+	}
+	ApplicationLogExecution struct {
+		Trigger       string          `json:"trigger"`
+		Contract      string          `json:"contract"`
+		VmState       string          `json:"vmstate"`
+		GasConsumed   string          `json:"gas_consumed"`
+		Stack         []State         `json:"stack"`
+		Notifications []*Notification `json:"notifications"`
+	}
+)
 
 // Notification .
 type Notification struct {
